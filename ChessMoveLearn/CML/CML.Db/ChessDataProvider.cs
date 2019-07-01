@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CML.Db
 {
@@ -47,24 +48,27 @@ namespace CML.Db
         }
     }
 
+    public class ChessService
+    {
+        private readonly ChessDataProvider _chessDataProvider;
+
+        public ChessService(ChessDataProvider chessDataProvider)
+        {
+            _chessDataProvider = chessDataProvider;
+        }
+
+        public bool IsMoveValid(PieceType pieceType, Point fromCoord, Point toCoord)
+        {
+            return _chessDataProvider.GetPieces()
+                    .First(x => x.Type == pieceType) //should always get good type from frontend
+                    .MoveToPoints.Contains(toCoord);
+                    //.MoveToPoints.Any(x => x.X == toCoord.X && x.Y == toCoord.Y);
+        }
+    }
+    
     internal static class MoveToPointsSerializer
     {
-        // Directions
-        // 7 0 1
-        // 6 x 2
-        // 5 4 3
-        //
-        // Format
-        //
-        // KNIGHT
-        // F0T7;F0T1;...
-        // F means starting sequence of false/hidden moves
-        // T means starting seqeunce of true moves
-        // 0,7,... means direction
-        // RESULT: KNIGHT move F0T7 means  must go UP one step and next can sit at UP-LEFT postion.
-        // RESULT: ROOK move T00..0 means can sit on each step going UP
-        //
-        private static Tuple<int, int> CharToCord(char c)
+        private static Tuple<int, int> CharToCoord(char c)
         {
             switch (c)
             {
@@ -80,6 +84,25 @@ namespace CML.Db
                 default: return null;
             }
         }
+
+        /// <summary>
+        /// Directions
+        /// 7 0 1
+        /// 6 x 2
+        /// 5 4 3
+        /// 
+        /// Format
+        /// 
+        /// KNIGHT
+        /// F0T7;F0T1;...
+        /// F means starting sequence of false/hidden moves
+        /// T means starting seqeunce of true moves
+        /// 0,7,... means direction
+        /// RESULT: KNIGHT move F0T7 means  must go UP one step and next can sit at UP-LEFT postion.
+        /// RESULT: ROOK move T00..0 means can sit on each step going UP
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
         public static Point[] FromString(string code)
         {
             var moveToPoints = new List<Point>();
@@ -107,7 +130,7 @@ namespace CML.Db
                         continue;
                     }
 
-                    var cord = CharToCord(c);
+                    var cord = CharToCoord(c);
                     if (cord == null) continue; //should never be null
                     x = x + cord.Item1;
                     y = y + cord.Item2;

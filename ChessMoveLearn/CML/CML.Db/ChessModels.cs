@@ -12,16 +12,35 @@ namespace CML.Db
     {
         public int X { get; set; }
         public int Y { get; set; }
+
         public Point(int x, int y)
         {
             this.X = x;
             this.Y = y;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Point p))
+                return false;
+
+            return (this.X == p.X) && (this.Y == p.Y);
+        }
+
+        public override int GetHashCode()
+        {
+            return (X << 2) ^ Y;
+        }
     }
 
     public enum PieceType
     {
-        Pawn,         Rook,         Knight,         Bishop,         Queen,         King
+        Pawn,
+        Rook,
+        Knight,
+        Bishop,
+        Queen,
+        King
     }
 
     public class Piece
